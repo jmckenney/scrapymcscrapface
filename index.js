@@ -26,18 +26,12 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 const getItemsFromListings = async (searchKey) => {
-  let items;
-  let page;
-  let browser;
   searchUrl = `${url}?query=${encodeURI(
     searchKey
   )}&sort=rel&srchType=T&postedToday=1&min_price=${minPrice}&search_distance=${searchDistance}&postal=${postalCode}`;
-  try {
-    browser = await puppeteer.launch();
-    page = await browser.newPage();
-  } catch (err) {
-    console.error(err);
-  }
+  const browser = await puppeteer.launch();
+  const page = await browser.newPage();
+  let items;
   try {
     await page.goto(searchUrl);
     items = await page.evaluate(() => {
@@ -89,19 +83,16 @@ const isInDatabase = (searchKey, results) => {
   });
 };
 
-app.post("/look-for-it", async (req, res) => {
-  console.log(req.body.searchKey);
+app.get("/look-for-it", async (req, res) => {
   const searchKey = req.body.searchKey;
-  const resultsFromListingsService = await getItemsFromListings(searchKey);
-  // if not found, don't bother checking db/instering/texting
 
+  const resultsFromListingsService = await getItemsFromListings(searchKey);
+
+  // if not found, don't bother checking db/instering/texting
   if (!resultsFromListingsService.length) {
     return res.json({ status: "NONE_FOUND" });
   }
-  const doesExistInDatabase = isInDatabase(
-    searchKey,
-    resultsFromListingsService
-  ).then((res) => {
+  isInDatabase(searchKey, resultsFromListingsService).then((res) => {
     if (!res) {
       // console.log("it is not in the database! sms and insert");
       db.searches.updateOne(
