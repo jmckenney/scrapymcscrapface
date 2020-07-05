@@ -26,12 +26,18 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 const getItemsFromListings = async (searchKey) => {
+  let items;
+  let page;
+  let browser;
   searchUrl = `${url}?query=${encodeURI(
     searchKey
   )}&sort=rel&srchType=T&postedToday=1&min_price=${minPrice}&search_distance=${searchDistance}&postal=${postalCode}`;
-  const browser = await puppeteer.launch();
-  const page = await browser.newPage();
-  let items;
+  try {
+    browser = await puppeteer.launch();
+    page = await browser.newPage();
+  } catch (err) {
+    console.error(err);
+  }
   try {
     await page.goto(searchUrl);
     items = await page.evaluate(() => {
