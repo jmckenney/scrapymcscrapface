@@ -94,7 +94,6 @@ app.get("/look-for-it", async (req, res) => {
   }
   isInDatabase(searchKey, resultsFromListingsService).then((res) => {
     if (!res) {
-      // console.log("it is not in the database! sms and insert");
       db.searches.updateOne(
         { searchKey: searchKey }, // Filter
         { $set: { results: resultsFromListingsService } }, // Update
